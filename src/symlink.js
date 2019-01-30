@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const fse = require('fs-extra')
+const fse = require('fs-extra');
+const values = require('lodash.values');
 
 const copyFolder = (serverless, commonFolder, destinationFolder) => {
   return targetFuncs(serverless)
@@ -30,7 +31,7 @@ const targetFuncs = (serverless) => {
   let inputOpt = serverless.processedInput.options;
   return inputOpt.function
     ? [inputOpt.functionObj]
-    : values(this.serverless.service.functions);
+    : values(serverless.service.functions);
 };
 
 module.exports = { copyFolder };

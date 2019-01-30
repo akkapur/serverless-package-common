@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/akkapur/serverless-package-common#readme",
   "dependencies": {
-    "fs-extra": "^7.0.1"
+    "fs-extra": "^7.0.1",
+    "lodash.values": "^4.3.0"
   }
 }
