@@ -2,49 +2,29 @@
 
 const symlink = require('./src/symlink');
 
-class PackageCommon {
+class PackageCopyCommon {
   constructor(serverless, options) {
     this.serverless = serverless;
     this.options = Object.assign({
-      common: []
-    }, this.serverless.service.custom && this.serverless.service.custom.packageCommon || {});
-
-    this.symlinked = false;
+      sources: [],
+      destination: ''
+    }, this.serverless.service.custom && this.serverless.service.custom.packageCopyCommon || {});
 
     this.hooks = {
-      'before:package:createDeploymentArtifacts': this.beforeDeploy.bind(this),
-      'after:deploy:deploy': this.afterDeploy.bind(this)
+      'before:package:createDeploymentArtifacts': this.copyCommon.bind(this),
+      'before:deploy:function:packageFunction': this.copyCommon.bind(this)
     };
-
-    this.handleExit();
   }
 
-  beforeDeploy() {
-    // Symlink common folders
-    return Promise.all(this.options.common.map(commonFolder => {
-        this.symlinked = true;
-        return symlink.createFolder(commonFolder, this.serverless);
+  copyCommon() {
+    const destination = this.options.destination;
+    return Promise.all(this.options.sources.map(commonFolder => {
+        return symlink.copyFolder(this.serverless, commonFolder, destination);
       }))
       .then(() => {
-        this.serverless.cli.log(`[serverless-package-common] Package Common is complete`);
+        this.serverless.cli.log(`[serverless-package-copy-common] Package Copy Common is complete`);
       });
-  }
-
-  afterDeploy() {
-    if(this.symlinked) {
-      this.options.common.forEach(commonFolder => {
-        const target = commonFolder.replace(/..\//g, '');
-        symlink.removeFolder(target);
-      });
-    }
-  }
-
-  handleExit(func) {
-    ['SIGINT', 'SIGTERM', 'SIGQUIT']
-      .forEach(signal => process.on(signal, () => {
-        this.afterDeploy();
-      }));
   }
 }
 
-module.exports = PackageCommon;
+module.exports = PackageCopyCommon;

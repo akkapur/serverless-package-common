@@ -1,54 +1,36 @@
 const fs = require('fs');
 const path = require('path');
-const rimraf = require('rimraf');
-const yesno = require('yesno');
+const fse = require('fs-extra')
 
-const exists = path => {
-  try {
-    const stats = fs.lstatSync(path);
-    console.log(path);
-    if(!stats.isSymbolicLink()) {
-      return true;
-    }
-  } catch(e) {}
+const copyFolder = (serverless, commonFolder, destinationFolder) => {
+  return targetFuncs(serverless)
+  .map(f => {
+    const destDir = path.join(serverless.config.servicePath, f.module, destinationFolder);
+    const folderToCopy = path.join(serverless.config.servicePath, commonFolder);
 
-  return false;
-};
-
-const askToOverwrite = (targetExists, folder) => {
-  let ask = Promise.resolve();
-  if(targetExists.length > 0) {
-    ask = new Promise((resolve, reject) => {
-      let targets = 'Folders';
-      console.log(targetExists);
-      if(targetExists.length < 5) {
-        targets = targetExists.join(', ');
+    try {
+      serverless.cli.log(`[serverless-package-copy-common] Copying from ${folderToCopy} to ${destDir}`);
+      
+      if (!fs.existsSync(destDir)){
+        fs.mkdirSync(destDir, { recursive: true });
       }
-      yesno.ask(`${targets} from ${folder} already exist${targetExists.length == 1 ? 's' : ''} in the service folder, do you want to overwrite files?`, false, ok =>
-        ok ? resolve() : reject()
-      );
-    });
-  }
 
-  return ask;
+      fse.copySync(folderToCopy, destDir)
+
+      serverless.cli.log(`[serverless-package-copy-common] Copy finished`);
+      return true;
+    } catch (err) {
+      serverless.cli.log(`[serverless-package-copy-common] Error Copying. ${err}`);
+      return false;
+    }
+  });
 };
 
-// Symlink a folder
-const createFolder = (folder, serverless) => {
-  const target = path.join(process.cwd(), folder.replace(/..\//g, ''));
-
-  // Check if folder/file with symlink name already exists in top level
-  return askToOverwrite(exists(target) ? [target] : [], folder)
-    .then(() => {
-      // There is either no conflict or the user has accepted overwriting
-      serverless.cli.log(`[serverless-package-common] Symlinking app ${folder}`);
-      rimraf.sync(target);
-      fs.symlinkSync(folder, target);
-    });
+const targetFuncs = (serverless) => {
+  let inputOpt = serverless.processedInput.options;
+  return inputOpt.function
+    ? [inputOpt.functionObj]
+    : values(this.serverless.service.functions);
 };
 
-const removeFolder = folder => {
-  rimraf.sync(path.join(process.cwd(), folder));
-};
-
-module.exports = { createFolder, removeFolder };
+module.exports = { copyFolder };
