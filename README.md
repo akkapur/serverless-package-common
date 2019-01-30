@@ -7,6 +7,11 @@ Before deploying, this plugin copies contents of folders containing shared code 
 ### Installation
 
 ```
+npm i serverless-package-copy-common --save-dev
+```
+Or
+
+```
 npm install https://github.com/akkapur/serverless-package-common.git
 ```
 
