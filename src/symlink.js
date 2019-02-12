@@ -12,9 +12,7 @@ const copyFolder = (serverless, commonFolder, destinationFolder) => {
     try {
       serverless.cli.log(`[serverless-package-copy-common] Copying from ${folderToCopy} to ${destDir}`);
       
-      if (!fs.existsSync(destDir)){
-        fs.mkdirSync(destDir, { recursive: true });
-      }
+      fse.mkdirsSync(destDir);
 
       fse.copySync(folderToCopy, destDir)
 
