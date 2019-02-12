@@ -1,6 +1,6 @@
 {
   "name": "serverless-package-copy-common",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "📦 Deploy microservice with common code",
   "main": "index.js",
   "scripts": {
